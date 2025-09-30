@@ -2,30 +2,24 @@
 
 bashio::log.info "Hello World Add-on is starting up..."
 bashio::log.info "-----------------------------------------------------------"
-bashio::log.info "DEBUG: Printing environment variables"
-env
+bashio::log.info "Using Nginx as a production-grade web server."
 bashio::log.info "-----------------------------------------------------------"
 
-WEB_DIR="/www"
-bashio::log.info "DEBUG: Checking if web directory '${WEB_DIR}' exists..."
-if [ -d "$WEB_DIR" ]; then
-    bashio::log.info "SUCCESS: Web directory '${WEB_DIR}' found."
-    bashio::log.info "DEBUG: Contents of '${WEB_DIR}':"
-    ls -lA "$WEB_DIR"
-else
-    bashio::log.error "FATAL: Web directory '${WEB_DIR}' not found. Check the Dockerfile."
-    exit 1
-fi
+# Get the port from the Home Assistant Supervisor for Ingress
+PORT=$(bashio::network.ingress_port)
+bashio::log.info "Ingress is enabled. Configuring Nginx to listen on port: ${PORT}"
 
-PORT=8099
-bashio::log.info "Starting built-in httpd server on port ${PORT}, serving from ${WEB_DIR}"
+# Dynamically update the Nginx configuration with the correct port
+CONFIG_PATH="/etc/nginx/nginx.conf"
+bashio::log.info "Updating Nginx configuration at ${CONFIG_PATH}..."
+sed -i "s/%%PORT%%/${PORT}/g" "${CONFIG_PATH}"
 
-# Start the httpd server in the foreground
-# -f: Run in the foreground
-# -p PORT: Listen on this port
-# -h /www: Serve files from this directory
-exec httpd -f -p "${PORT}" -h "${WEB_DIR}"
+bashio::log.info "Nginx configuration updated. Starting Nginx server..."
+
+# Start the Nginx server in the foreground
+# -c specifies the configuration file to use
+exec nginx -c "${CONFIG_PATH}"
 
 # The script will end here as `exec` replaces the current process.
-# If httpd exits, the container will stop.
-bashio::log.warning "httpd server has stopped. Add-on is shutting down."
+# If nginx exits, the container will stop.
+bashio::log.warning "Nginx server has stopped. Add-on is shutting down."
