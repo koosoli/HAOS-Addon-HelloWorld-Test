@@ -2,13 +2,15 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Install python3
-RUN apk add --no-cache python3
+# Update package index and install python3
+# This is necessary to ensure the package lists are fresh before installing.
+RUN apk update && \
+    apk add --no-cache python3
 
-# Copy rootfs
-COPY rootfs /
+# Copy web content to the container
+COPY rootfs/www /www
 
-# Set up our script and make it executable
+# Copy the run script and make it executable
 COPY run.sh /
 RUN chmod a+x /run.sh
 
