@@ -2,6 +2,9 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+# Install python3
+RUN apk add --no-cache python3
+
 # Copy rootfs
 COPY rootfs /
 
