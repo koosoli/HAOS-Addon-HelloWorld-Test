@@ -1,0 +1,23 @@
+# hello_world/config.yaml
+name: "Hello World"
+version: "1.0.0"
+slug: "hello_world"
+description: "A simple Hello World addon for Home Assistant."
+arch:
+  - "aarch64"
+  - "amd64"
+  - "armhf"
+  - "armv7"
+  - "i386"
+init: false
+hassio_api: true
+hassio_role: "default"
+uart: true
+webui: "http://[HOST]:[PORT:8099]"
+ingress: true
+panel_icon: "mdi:earth"
+panel_title: "Hello World"
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: "Web interface"
