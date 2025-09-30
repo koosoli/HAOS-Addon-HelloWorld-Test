@@ -1,38 +1,59 @@
-#!/usr/bin/with-contenv bashio
+#!/bin/bash
+set -e
 
-bashio::log.info "Hello World Add-on is starting up..."
-bashio::log.info "-----------------------------------------------------------"
-bashio::log.info "Using the official Home Assistant Nginx base image."
-bashio::log.info "Configuring Nginx for Ingress..."
-bashio::log.info "-----------------------------------------------------------"
+echo "Hello World Add-on is starting up..."
+echo "-----------------------------------------------------------"
+echo "Configuring Nginx for Ingress..."
+echo "-----------------------------------------------------------"
 
-# Get the port from the Home Assistant Supervisor for Ingress
-PORT=$(bashio::network.ingress_port)
-bashio::log.info "Ingress is enabled. Configuring Nginx to listen on port: ${PORT}"
+# Get the ingress port from environment (Home Assistant sets this)
+if [ -n "$HASSIO_TOKEN" ]; then
+    # Try to get the ingress port from the API
+    INGRESS_PORT=$(curl -s -H "Authorization: Bearer $HASSIO_TOKEN" \
+        http://supervisor/addons/self/info | jq -r '.data.ingress_port // 8099')
+else
+    # Fallback to default port
+    INGRESS_PORT=8099
+fi
 
-# Create a new Nginx server configuration file for Ingress.
-# This will be included by the main nginx.conf from the base image.
-CONFIG_PATH="/etc/nginx/servers/ingress.conf"
-bashio::log.info "Creating Nginx configuration at ${CONFIG_PATH}..."
+echo "Nginx will listen on port: ${INGRESS_PORT}"
 
-# Write the server configuration to the file
-cat > "${CONFIG_PATH}" << EOF
-server {
-    # Listen on the port that Home Assistant provides for Ingress
-    listen ${PORT};
+# Create Nginx configuration
+cat > /etc/nginx/nginx.conf << EOF
+user root;
+worker_processes auto;
+error_log /dev/stdout info;
+pid /var/run/nginx.pid;
 
-    # The location of our web files
-    root /www;
+events {
+    worker_connections 1024;
+}
 
-    # The default file to serve
-    index index.html;
-
-    # Fallback to index.html for single-page applications
-    location / {
-        try_files \$uri \$uri/ /index.html;
+http {
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+    
+    access_log /dev/stdout;
+    
+    sendfile on;
+    keepalive_timeout 65;
+    
+    server {
+        listen ${INGRESS_PORT};
+        server_name _;
+        
+        root /www;
+        index index.html;
+        
+        location / {
+            try_files \$uri \$uri/ /index.html;
+        }
     }
 }
 EOF
 
-bashio::log.info "Nginx configuration for Ingress created."
-bashio::log.info "The Nginx server will now be started by the base image's s6-overlay."
+echo "Nginx configuration created."
+echo "Starting Nginx..."
+
+# Start nginx in foreground
+exec nginx -g 'daemon off;'
