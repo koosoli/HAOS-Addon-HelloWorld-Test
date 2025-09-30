@@ -1,0 +1,1 @@
+# HAOS-Addon-HelloWorld-Test
