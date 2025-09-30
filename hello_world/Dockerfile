@@ -2,13 +2,8 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Update package index and install nginx
-# This provides a robust, production-grade web server.
-RUN apk update && \
-    apk add --no-cache nginx
-
-# Copy our custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# The base image is now specified in build.yaml and comes with Nginx pre-installed.
+# No package installation or manual Nginx configuration is needed here.
 
 # Copy web content to the container
 COPY rootfs/www /www
