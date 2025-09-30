@@ -2,10 +2,8 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
-# Update package index and install python3
-# This is necessary to ensure the package lists are fresh before installing.
-RUN apk update && \
-    apk add --no-cache python3
+# The base image contains all the tools we need.
+# No package installation is necessary for this simple addon.
 
 # Copy web content to the container
 COPY rootfs/www /www

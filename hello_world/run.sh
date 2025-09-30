@@ -6,16 +6,6 @@ bashio::log.info "DEBUG: Printing environment variables"
 env
 bashio::log.info "-----------------------------------------------------------"
 
-bashio::log.info "DEBUG: Checking if python3 is installed..."
-if command -v python3 &> /dev/null
-then
-    bashio::log.info "SUCCESS: python3 is installed."
-    python3 --version
-else
-    bashio::log.error "FATAL: python3 is not installed. Please check the Dockerfile."
-    exit 1
-fi
-
 WEB_DIR="/www"
 bashio::log.info "DEBUG: Checking if web directory '${WEB_DIR}' exists..."
 if [ -d "$WEB_DIR" ]; then
@@ -23,22 +13,19 @@ if [ -d "$WEB_DIR" ]; then
     bashio::log.info "DEBUG: Contents of '${WEB_DIR}':"
     ls -lA "$WEB_DIR"
 else
-    bashio::log.error "FATAL: Web directory '${WEB_DIR}' not found."
+    bashio::log.error "FATAL: Web directory '${WEB_DIR}' not found. Check the Dockerfile."
     exit 1
 fi
 
-bashio::log.info "Changing to directory '${WEB_DIR}'..."
-cd "$WEB_DIR"
-
 PORT=8099
-bashio::log.info "Starting Python3 HTTP server on port ${PORT}..."
-python3 -m http.server "${PORT}" &
+bashio::log.info "Starting built-in httpd server on port ${PORT}, serving from ${WEB_DIR}"
 
-SERVER_PID=$!
-bashio::log.info "Web server started with PID: ${SERVER_PID}"
+# Start the httpd server in the foreground
+# -f: Run in the foreground
+# -p PORT: Listen on this port
+# -h /www: Serve files from this directory
+exec httpd -f -p "${PORT}" -h "${WEB_DIR}"
 
-# Wait for the server to exit
-wait "${SERVER_PID}"
-
-bashio::log.info "Web server has stopped."
-bashio::log.info "Hello World Add-on is shutting down."
+# The script will end here as `exec` replaces the current process.
+# If httpd exits, the container will stop.
+bashio::log.warning "httpd server has stopped. Add-on is shutting down."
