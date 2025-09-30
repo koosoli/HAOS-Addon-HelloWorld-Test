@@ -1,6 +1,5 @@
-# hello_world/config.yaml
 name: "Hello World"
-version: "1.0.0"
+version: "1.0.1"
 slug: "hello_world"
 description: "A simple Hello World addon for Home Assistant."
 arch:
@@ -10,17 +9,7 @@ arch:
   - "armv7"
   - "i386"
 init: false
-hassio_api: true
-hassio_role: "default"
-uart: true
-# Ingress is enabled, so the port is managed by Home Assistant.
-# The webui key is not needed when using Ingress.
 ingress: true
+ingress_port: 8099
 panel_icon: "mdi:earth"
 panel_title: "Hello World"
-ports:
-  # Set the host port to null, as it is managed by Ingress.
-  # The addon will listen on a dynamic port provided by the Supervisor.
-  8099/tcp: null
-ports_description:
-  8099/tcp: "Web interface (handled by Ingress)"
