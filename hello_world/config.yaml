@@ -13,11 +13,14 @@ init: false
 hassio_api: true
 hassio_role: "default"
 uart: true
-webui: "http://[HOST]:[PORT:8099]"
+# Ingress is enabled, so the port is managed by Home Assistant.
+# The webui key is not needed when using Ingress.
 ingress: true
 panel_icon: "mdi:earth"
 panel_title: "Hello World"
 ports:
-  8099/tcp: 8099
+  # Set the host port to null, as it is managed by Ingress.
+  # The addon will listen on a dynamic port provided by the Supervisor.
+  8099/tcp: null
 ports_description:
-  8099/tcp: "Web interface"
+  8099/tcp: "Web interface (handled by Ingress)"
